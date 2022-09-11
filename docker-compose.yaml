@@ -1,0 +1,63 @@
+version: '3'
+
+networks:
+  web-network:
+
+services:
+  docker-ent:
+    image: chudaozhe/ent:1.0-test
+    hostname: ent
+    restart: always
+    tty: true
+    volumes:
+      - ./www/ent/data:/data/data
+      - ./www/ent/logs:/data/logs
+    networks:
+      - web-network
+
+  docker-nginx:
+    image: nginx:1.21.3
+    ports:
+      - "80:80"
+      - "443:443"
+      - "25:25"
+      - "465:465"
+    tty: true
+    volumes:
+      - ./www:/var/www
+      - ./etc/nginx:/etc/nginx/conf.d
+      - nginx-log:/var/log/nginx
+    networks:
+      - web-network
+
+  docker-redis:
+    image: redis:6.2.5
+    restart: always
+    tty: true
+    command: redis-server /etc/redis.conf
+    volumes:
+      - ./etc/redis.conf:/etc/redis.conf
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - web-network
+
+  docker-mysql:
+    image: mariadb:10.5.12
+    restart: always
+    tty: true
+    volumes:
+      - ./etc/my.cnf:/etc/my.cnf
+      - db-data:/var/lib/mysql
+    environment:
+      - "MYSQL_ALLOW_EMPTY_PASSWORD=yes"
+    ports:
+      - "3306:3306"
+    networks:
+      - web-network
+
+volumes:
+  db-data:
+  redis-data:
+  nginx-log:
